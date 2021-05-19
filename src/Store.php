@@ -8,6 +8,7 @@ use Illuminate\Cache\TaggableStore;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Cache\Store as StoreContract;
 use Illuminate\Cache\RetrievesMultipleKeys;
+use Symfony\Component\VarExporter\VarExporter;
 
 class Store extends TaggableStore implements StoreContract
 {
@@ -63,7 +64,7 @@ class Store extends TaggableStore implements StoreContract
          */
         $this->directory = $directory ?: config('cache.stores.opcache.path', config('cache.stores.file.path'));
     }
-    
+
     /**
      * Begin executing a new tags operation.
      *
@@ -77,7 +78,7 @@ class Store extends TaggableStore implements StoreContract
         /*
          * Now we are able to flush only tagged cache items
          */
-        if (! empty($names)) {
+        if (!empty($names)) {
             $this->setSubDirectory($this->tagsSubDir($names));
         }
 
@@ -141,7 +142,7 @@ class Store extends TaggableStore implements StoreContract
      */
     public function put($key, $value, $minutes = 0)
     {
-        $val = var_export($value, true);
+        $val = VarExporter::export($value);
 
         // HHVM fails at __set_state, so just use object cast for now
         $val = str_replace('stdClass::__set_state', '(object)', $val);
@@ -366,7 +367,7 @@ class Store extends TaggableStore implements StoreContract
      */
     protected function checkDirectory($dir)
     {
-        if (! is_dir($dir)) {
+        if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
     }
@@ -396,7 +397,7 @@ class Store extends TaggableStore implements StoreContract
 
         if (isset($exp)) {
             $extended = strtotime('+' . $minutes . ' minutes', $exp);
-            return $this->writeFile($key, $extended, var_export($val, true));
+            return $this->writeFile($key, $extended, VarExporter::export($val));
         }
         return false;
     }
