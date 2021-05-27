@@ -279,10 +279,11 @@ class Store extends TaggableStore implements StoreContract
                 continue;
             }
 
+            @unlink($filename);
+
             if ($this->enabled) {
                 opcache_invalidate($filename, true);
             }
-            @unlink($filename);
         }
 
         if ($removeDirectory) {
