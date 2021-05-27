@@ -147,7 +147,22 @@ class Store extends TaggableStore implements StoreContract
         // HHVM fails at __set_state, so just use object cast for now
         $val = str_replace('stdClass::__set_state', '(object)', $val);
 
-        return $this->writeFile($key, $this->expiration($minutes), $val);
+        if ($this->writeFile($key, $this->expiration($minutes), $val)) {
+            if ($this->enabled) {
+                $path = $this->filePath($key);
+
+                if ((php_sapi_name() === 'cli' && ini_get('opcache.enable_cli') == '1') ||
+                    (php_sapi_name() !== 'cli' && ini_get('opcache.enable') == '1')
+                ) {
+                    opcache_invalidate($path, true);
+                    opcache_compile_file($path);
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
