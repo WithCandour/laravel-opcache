@@ -226,10 +226,17 @@ class Store extends TaggableStore implements StoreContract
      */
     public function forget($key)
     {
-        if ($this->enabled) {
-            opcache_invalidate($this->filePath($key), true);
+        $filePath = $this->filePath($key);
+
+        if (@unlink($filePath)) {
+            if ($this->enabled) {
+                opcache_invalidate($filePath, true);
+            }
+
+            return true;
         }
-        return @unlink($this->filePath($key));
+
+        return false;
     }
 
     /**
